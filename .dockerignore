@@ -1,0 +1,12 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+runtime/output
+runtime/log
+runtime/cache
+runtime/data
+runtime/config/myconfig.json

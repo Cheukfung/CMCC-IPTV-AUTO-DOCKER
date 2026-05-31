@@ -1,0 +1,9 @@
+{
+  "enabled": false,
+  "cron": "0 5 * * *",
+  "options": {
+    "skip_epg": false,
+    "skip_check": false,
+    "skip_probe": false
+  }
+}

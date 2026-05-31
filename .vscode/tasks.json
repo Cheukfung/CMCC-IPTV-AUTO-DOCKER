@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run CMCC IPTV Auto Docker",
+			"type": "shell",
+			"command": "source .venv/bin/activate && uvicorn backend.app.main:app --host 127.0.0.1 --port 8080",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Run CMCC IPTV Auto Docker",
+			"type": "shell",
+			"command": "source .venv/bin/activate && uvicorn backend.app.main:app --host 127.0.0.1 --port 8080",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Run CMCC IPTV Auto Docker",
+			"type": "shell",
+			"command": "source .venv/bin/activate && uvicorn backend.app.main:app --host 127.0.0.1 --port 8080",
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}

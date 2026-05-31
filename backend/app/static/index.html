@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMCC IPTV Auto Docker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div id="app" v-cloak>
+      <div class="app-shell">
+        <header class="app-header">
+          <div class="brand-block">
+            <p class="eyebrow">CMCC IPTV Auto Docker</p>
+            <h1>广东移动 IPTV 控制台</h1>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card">
+              <span>系统状态</span>
+              <strong class="health-status">
+                <span class="health-dot" :class="health.status === 'ok' ? 'dot-ok' : 'dot-warn'"></span>
+                {{ health.status === 'ok' ? '正常' : health.status }}
+              </strong>
+            </article>
+            <article class="metric-card" :class="{ 'card-running': runningTask }">
+              <span>当前任务</span>
+              <strong>{{ runningTask ? runningTask.status : '空闲' }}</strong>
+              <small>{{ runningTask ? runningTask.id : '暂无运行中的任务' }}</small>
+            </article>
+            <article class="metric-card accent">
+              <span>产物数量</span>
+              <strong>{{ artifacts.length }}</strong>
+            </article>
+          </div>
+        </header>
+
+        <transition name="slide-banner">
+          <div v-if="runningTask" class="running-banner">
+            <span class="running-dot"></span>
+            <span>正在执行任务&ensp;<strong>{{ runningTask.id }}</strong></span>
+            <el-tag effect="dark" type="warning" size="small">{{ runningTask.status }}</el-tag>
+          </div>
+        </transition>
+
+        <el-tabs v-model="activeView" class="main-tabs">
+          <el-tab-pane name="dashboard">
+            <template #label>
+              <span class="tab-with-icon">
+                <el-icon><Monitor></Monitor></el-icon>
+                概览
+              </span>
+            </template>
+            <div class="view-stack">
+              <el-row :gutter="16">
+                <el-col :xs="24" :lg="16">
+                  <el-card class="surface-card" shadow="never">
+                    <template #header>
+                      <div class="card-header">
+                        <h2>最近任务</h2>
+                        <el-button plain @click="refreshLiveData">刷新</el-button>
+                      </div>
+                    </template>
+                    <el-table :data="tasks" size="small" @row-click="openTaskLogs">
+                      <el-table-column prop="id" label="任务 ID" min-width="140"></el-table-column>
+                      <el-table-column label="状态" width="110">
+                        <template #default="scope">
+                          <el-tag :type="statusTagType(scope.row.status)" effect="light">{{ scope.row.status }}</el-tag>
+                        </template>
+                      </el-table-column>
+                      <el-table-column prop="source" label="来源" width="120"></el-table-column>
+                      <el-table-column label="创建时间" min-width="168">
+                        <template #default="scope">{{ formatDateTime(scope.row.created_at) }}</template>
+                      </el-table-column>
+                    </el-table>
+                  </el-card>
+                </el-col>
+                <el-col :xs="24" :lg="8">
+                  <el-card class="surface-card" shadow="never">
+                    <template #header>
+                      <div class="card-header compact">
+                        <h2>运行要求</h2>
+                      </div>
+                    </template>
+                    <ul class="rule-list">
+                      <li>容器或宿主机必须能访问广东移动 IPTV 目标网段。</li>
+                      <li>启用深度探测时，系统内需要 ffprobe。</li>
+                      <li>输出、日志、缓存都落在 runtime 目录，可直接映射卷。</li>
+                    </ul>
+                  </el-card>
+                </el-col>
+              </el-row>
+
+              <el-card class="surface-card" shadow="never">
+                <template #header>
+                  <div class="card-header">
+                    <h2>最近产物</h2>
+                    <el-button plain @click="loadArtifacts">刷新产物</el-button>
+                  </div>
+                </template>
+                <div class="artifact-grid">
+                  <article v-for="artifact in artifacts.slice(0, 6)" :key="artifact.name" class="artifact-item" @click="previewArtifact(artifact.name)">
+                    <h3>{{ artifact.name }}</h3>
+                    <p>{{ formatSize(artifact.size) }}</p>
+                    <span>{{ formatDateTime(artifact.updated_at) }}</span>
+                  </article>
+                  <el-empty v-if="!artifacts.length" description="暂无输出文件"></el-empty>
+                </div>
+              </el-card>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane name="run">
+            <template #label>
+              <span class="tab-with-icon">
+                <el-icon><video-play></video-play></el-icon>
+                运行
+              </span>
+            </template>
+            <el-card class="surface-card" shadow="never">
+              <template #header>
+                <div class="card-header"><h2>手动执行</h2></div>
+              </template>
+              <div class="run-switch-grid">
+                <div class="run-switch-card">
+                  <div>
+                    <strong>跳过 EPG</strong>
+                    <p class="switch-desc">不下载节目单，运行更快</p>
+                  </div>
+                  <el-switch v-model="runForm.skip_epg"></el-switch>
+                </div>
+                <div class="run-switch-card">
+                  <div>
+                    <strong>跳过检测</strong>
+                    <p class="switch-desc">不检测频道流可用性</p>
+                  </div>
+                  <el-switch v-model="runForm.skip_check"></el-switch>
+                </div>
+                <div class="run-switch-card">
+                  <div>
+                    <strong>跳过深探</strong>
+                    <p class="switch-desc">不执行 ffprobe 分辨率探测</p>
+                  </div>
+                  <el-switch v-model="runForm.skip_probe"></el-switch>
+                </div>
+              </div>
+              <div class="action-row">
+                <el-button type="primary" @click="runTask">启动任务</el-button>
+                <el-button plain @click="triggerSchedule">按定时配置立即执行</el-button>
+              </div>
+              <p class="status-copy">{{ runStatus }}</p>
+            </el-card>
+          </el-tab-pane>
+
+          <el-tab-pane name="config">
+            <template #label>
+              <span class="tab-with-icon">
+                <el-icon><Setting></Setting></el-icon>
+                配置
+              </span>
+            </template>
+            <el-card class="surface-card" shadow="never">
+              <template #header>
+                <div class="card-header">
+                  <h2>可视化配置</h2>
+                  <div class="header-actions">
+                    <el-button plain @click="loadConfig">重新加载</el-button>
+                    <el-button plain @click="validateConfig">校验</el-button>
+                    <el-button plain @click="resetVisibleConfig">重置可视项</el-button>
+                    <el-button type="primary" @click="saveConfig">保存配置</el-button>
+                  </div>
+                </div>
+              </template>
+
+              <div class="config-summary-grid">
+                <article class="summary-surface">
+                  <span>可视覆盖项</span>
+                  <strong>{{ visibleOverrideCount }}</strong>
+                  <small>最终会写入 myconfig.json</small>
+                </article>
+                <article class="summary-surface">
+                  <span>默认继承项</span>
+                  <strong>{{ configSections.flatMap(section => section.fields).length - visibleOverrideCount }}</strong>
+                  <small>这些字段仍沿用默认值</small>
+                </article>
+                <article class="summary-surface warn">
+                  <span>未知自定义键</span>
+                  <strong>{{ unknownOverrideCount }}</strong>
+                  <small>{{ unknownOverrideCount ? '保存时会原样保留' : '当前没有额外自定义键' }}</small>
+                </article>
+              </div>
+
+              <el-alert
+                v-if="unknownOverrideCount"
+                type="warning"
+                :closable="false"
+                show-icon
+                title="检测到未纳入可视化表单的自定义键，保存时会自动保留。"
+                class="section-alert"
+              ></el-alert>
+
+              <div class="validation-stack">
+                <el-alert
+                  v-if="configValidation.valid && !configValidation.errors.length && !configValidation.warnings.length"
+                  type="success"
+                  :closable="false"
+                  show-icon
+                  title="配置校验通过。"
+                ></el-alert>
+                <el-alert
+                  v-for="item in configValidation.errors"
+                  :key="`error-${item}`"
+                  type="error"
+                  :closable="false"
+                  show-icon
+                  :title="item"
+                ></el-alert>
+                <el-alert
+                  v-for="item in configValidation.warnings"
+                  :key="`warning-${item}`"
+                  type="warning"
+                  :closable="false"
+                  show-icon
+                  :title="item"
+                ></el-alert>
+              </div>
+
+              <div class="config-section-stack">
+                <section v-for="section in configSections" :key="section.id" :class="['config-section', { 'flow-layout': section.id === 'checker' }]">
+                  <div class="section-meta">
+                    <h3>{{ section.title }}</h3>
+                  </div>
+                  <div class="config-grid">
+                    <div
+                      v-for="field in section.fields"
+                      :key="field.key"
+                      :class="['config-field', { wide: field.fullWidth, overridden: isFieldOverridden(field) }]"
+                    >
+                      <div class="field-head">
+                        <h4>{{ field.label }}</h4>
+                        <el-tag size="small" effect="plain" :type="isFieldOverridden(field) ? 'warning' : 'info'">
+                          {{ isFieldOverridden(field) ? '已覆盖' : '默认' }}
+                        </el-tag>
+                      </div>
+
+                      <template v-if="field.type === 'boolean'">
+                        <el-switch v-model="configForm[field.key]" inline-prompt active-text="开" inactive-text="关"></el-switch>
+                      </template>
+
+                      <template v-else-if="field.type === 'select'">
+                        <el-select v-model="configForm[field.key]" class="full-width">
+                          <el-option v-for="option in field.options" :key="option.value" :label="option.label" :value="option.value"></el-option>
+                        </el-select>
+                      </template>
+
+                      <template v-else-if="field.type === 'number'">
+                        <el-input-number v-model="configForm[field.key]" :controls="false" class="full-width"></el-input-number>
+                      </template>
+
+                      <template v-else-if="field.type === 'float'">
+                        <el-input-number v-model="configForm[field.key]" :controls="false" :step="0.1" class="full-width"></el-input-number>
+                      </template>
+
+                      <template v-else-if="field.type === 'array'">
+                        <div class="dynamic-list">
+                          <div v-for="(_, index) in configForm[field.key]" :key="`${field.key}-${index}`" class="dynamic-row" :class="{ mapping: field.itemType === 'mapping' }">
+                            <el-input-number
+                              v-if="field.itemType === 'number'"
+                              v-model="configForm[field.key][index]"
+                              :controls="false"
+                              class="full-width"
+                            ></el-input-number>
+                            <el-input v-else v-model="configForm[field.key][index]" :placeholder="field.placeholder || ''"></el-input>
+                            <el-button plain type="danger" @click="removeArrayItem(field.key, index)">删除</el-button>
+                          </div>
+                          <div v-if="!configForm[field.key].length" class="empty-inline">当前没有条目，点击下方按钮新增。</div>
+                          <el-button plain @click="addArrayItem(field.key, field.itemType)">{{ field.addLabel || '新增一项' }}</el-button>
+                        </div>
+                      </template>
+
+                      <template v-else-if="field.type === 'mapping'">
+                        <div class="dynamic-list">
+                          <div v-for="(row, index) in configForm[field.key]" :key="`${field.key}-${index}`" class="dynamic-row mapping">
+                            <el-input v-model="row.source" :placeholder="field.leftLabel || '匹配关键词'"></el-input>
+                            <el-input v-model="row.target" :placeholder="field.rightLabel || '目标值'"></el-input>
+                            <el-button plain type="danger" @click="removeMappingItem(field.key, index)">删除</el-button>
+                          </div>
+                          <div v-if="!configForm[field.key].length" class="empty-inline">当前没有映射，点击下方按钮新增。</div>
+                          <el-button plain @click="addMappingItem(field.key)">{{ field.addLabel || '新增映射' }}</el-button>
+                        </div>
+                      </template>
+
+                      <template v-else>
+                        <el-input v-model="configForm[field.key]" :placeholder="field.placeholder || ''"></el-input>
+                      </template>
+
+                      <p class="field-note">默认值：{{ formatFieldPreview(field, getDefaultFieldValue(field)) }}</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </el-card>
+          </el-tab-pane>
+
+          <el-tab-pane name="logs">
+            <template #label>
+              <span class="tab-with-icon">
+                <el-icon><Document></Document></el-icon>
+                日志
+              </span>
+            </template>
+            <div class="view-stack">
+              <el-card class="surface-card" shadow="never">
+                <template #header>
+                  <div class="card-header compact"><h2>日志控制台</h2></div>
+                </template>
+                <div class="log-toolbar">
+                  <div class="log-toolbar-controls">
+                    <el-select v-model="activeTaskId" placeholder="选择任务" filterable class="task-select" @change="loadTaskLog">
+                      <el-option v-for="task in tasks" :key="task.id" :label="`${task.id} · ${task.status}`" :value="task.id"></el-option>
+                    </el-select>
+                    <el-button plain @click="loadTaskLog">刷新日志</el-button>
+                    <div class="toggle-inline">
+                      <span>自动刷新</span>
+                      <el-switch v-model="autoRefreshLogs"></el-switch>
+                    </div>
+                  </div>
+                  <div v-if="activeTask" class="log-summary-tags">
+                    <el-tag effect="dark">{{ activeTask.id }}</el-tag>
+                    <el-tag :type="statusTagType(activeTask.status)" effect="plain">{{ activeTask.status }}</el-tag>
+                    <el-tag effect="plain">来源 {{ activeTask.source }}</el-tag>
+                    <el-tag effect="plain">退出码 {{ activeTask.exit_code ?? '-' }}</el-tag>
+                    <el-tag effect="plain">{{ activeTask.message || '-' }}</el-tag>
+                  </div>
+                  <div v-else class="empty-inline">请选择任务。</div>
+                </div>
+              </el-card>
+
+              <el-card class="surface-card" shadow="never">
+                <template #header>
+                  <div class="card-header">
+                    <h2>日志输出</h2>
+                    <div class="toggle-inline">
+                      <span>自动滚动</span>
+                      <el-switch v-model="logAutoScroll"></el-switch>
+                    </div>
+                  </div>
+                </template>
+                <el-scrollbar ref="logScrollbarRef" height="420px" class="console-scroll">
+                  <pre class="console-block">{{ logContent || '暂无日志。' }}</pre>
+                </el-scrollbar>
+              </el-card>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane name="artifacts">
+            <template #label>
+              <span class="tab-with-icon">
+                <el-icon><folder-opened></folder-opened></el-icon>
+                产物
+              </span>
+            </template>
+            <el-row :gutter="16">
+              <el-col :xs="24" :lg="14">
+                <el-card class="surface-card" shadow="never">
+                  <template #header>
+                    <div class="card-header"><h2>输出文件</h2></div>
+                  </template>
+                  <el-table :data="artifacts" size="small" height="420">
+                    <el-table-column prop="name" label="名称" min-width="180"></el-table-column>
+                    <el-table-column label="更新时间" min-width="168">
+                      <template #default="scope">{{ formatDateTime(scope.row.updated_at) }}</template>
+                    </el-table-column>
+                    <el-table-column label="大小" width="100">
+                      <template #default="scope">{{ formatSize(scope.row.size) }}</template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="140">
+                      <template #default="scope">
+                        <div class="inline-actions">
+                          <el-button v-if="scope.row.previewable" link type="primary" @click="previewArtifact(scope.row.name)">预览</el-button>
+                          <el-link :href="resolveArtifactDownloadUrl(scope.row)" :underline="false" type="primary" target="_blank">下载</el-link>
+                        </div>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </el-card>
+              </el-col>
+              <el-col :xs="24" :lg="10">
+                <div class="artifact-side-stack">
+                  <el-card class="surface-card" shadow="never">
+                    <template #header>
+                      <div class="card-header compact"><h2>公开下载地址</h2></div>
+                    </template>
+                    <div v-if="publicDownloadEntries.length" class="public-url-list">
+                      <article v-for="entry in publicDownloadEntries" :key="entry.name" class="public-url-item">
+                        <div class="public-url-meta">
+                          <strong>{{ entry.name }}</strong>
+                          <el-link class="public-url-link" :href="entry.url" :underline="false" type="primary" target="_blank">{{ entry.url }}</el-link>
+                        </div>
+                        <el-button link type="primary" @click="copyText(entry.url)">复制</el-button>
+                      </article>
+                    </div>
+                    <div v-else class="empty-inline">当前还没有可公开的下载地址。</div>
+                  </el-card>
+
+                  <el-card class="surface-card" shadow="never">
+                    <template #header>
+                      <div class="card-header compact"><h2>文件预览</h2></div>
+                    </template>
+                    <el-scrollbar height="420px" class="console-scroll">
+                      <pre class="console-block">{{ artifactPreview }}</pre>
+                    </el-scrollbar>
+                  </el-card>
+                </div>
+              </el-col>
+            </el-row>
+          </el-tab-pane>
+
+          <el-tab-pane name="schedule">
+            <template #label>
+              <span class="tab-with-icon">
+                <el-icon><alarm-clock></alarm-clock></el-icon>
+                定时
+              </span>
+            </template>
+            <el-card class="surface-card" shadow="never">
+              <template #header>
+                <div class="card-header"><h2>定时任务</h2></div>
+              </template>
+              <el-form label-position="top" class="schedule-form">
+                <div class="run-switch-card schedule-hero">
+                  <div>
+                    <strong>启用定时</strong>
+                    <p class="switch-desc">按 Cron 表达式定时执行</p>
+                  </div>
+                  <el-switch v-model="scheduleForm.enabled"></el-switch>
+                </div>
+                <el-form-item label="Cron 表达式">
+                  <el-input v-model="scheduleForm.cron" placeholder="0 5 * * *"></el-input>
+                </el-form-item>
+                <div class="run-switch-grid">
+                  <div class="run-switch-card">
+                    <div>
+                      <strong>跳过 EPG</strong>
+                      <p class="switch-desc">不下载节目单，运行更快</p>
+                    </div>
+                    <el-switch v-model="scheduleForm.options.skip_epg"></el-switch>
+                  </div>
+                  <div class="run-switch-card">
+                    <div>
+                      <strong>跳过检测</strong>
+                      <p class="switch-desc">不检测频道流可用性</p>
+                    </div>
+                    <el-switch v-model="scheduleForm.options.skip_check"></el-switch>
+                  </div>
+                  <div class="run-switch-card">
+                    <div>
+                      <strong>跳过深探</strong>
+                      <p class="switch-desc">不执行 ffprobe 分辨率探测</p>
+                    </div>
+                    <el-switch v-model="scheduleForm.options.skip_probe"></el-switch>
+                  </div>
+                </div>
+                <div class="action-row">
+                  <el-button type="primary" @click="saveSchedule">保存定时配置</el-button>
+                </div>
+                <p class="status-copy">{{ scheduleStatus }}</p>
+              </el-form>
+            </el-card>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "ENABLE_EPG_DOWNLOAD": true,
+  "ENABLE_STREAM_CHECK": true,
+  "ENABLE_PROBE": false,
+  "CHECK_TARGET_GROUPS": [
+    "港澳台"
+  ]
+}

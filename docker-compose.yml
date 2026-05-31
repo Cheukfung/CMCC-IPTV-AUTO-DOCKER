@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cmcc_iptv_auto_docker
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./runtime/config:/app/runtime/config
+      - ./runtime/output:/app/runtime/output
+      - ./runtime/log:/app/runtime/log
+      - ./runtime/cache:/app/runtime/cache
+      - ./runtime/data:/app/runtime/data
