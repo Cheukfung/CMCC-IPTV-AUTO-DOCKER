@@ -1,8 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: cheukfung/cmcc-iptv-auto-docker:latest
     container_name: cmcc_iptv_auto_docker
     restart: unless-stopped
     ports:

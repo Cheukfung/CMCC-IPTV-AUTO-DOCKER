@@ -15,7 +15,8 @@ URL_KEYS = {
     "NGINX_PROXY_PREFIX",
     "EXTERNAL_M3U_URL",
 }
-LIST_KEYS = {"EPG_DAY_OFFSETS", "EPG_BASE_URLS", "CHECK_TARGET_GROUPS"}
+LIST_KEYS = {"EPG_BASE_URLS", "CHECK_TARGET_GROUPS"}
+TEXT_KEYS = {"CACHE_M3U_FILENAME"}
 BOOL_KEYS = {
     "IS_HWURL",
     "ENABLE_EPG_DOWNLOAD",
@@ -24,7 +25,9 @@ BOOL_KEYS = {
     "ENABLE_STREAM_CHECK",
     "ENABLE_PROBE",
     "XML_SKIP_CHANNELS_WITHOUT_EPG",
+    "EPG_RANDOM_DELAY",
 }
+FLOAT_KEYS = {"EPG_REQUEST_DELAY"}
 INT_KEYS = {
     "EPG_DOWNLOAD_RETRY_COUNT",
     "EPG_DOWNLOAD_RETRY_DELAY",
@@ -36,6 +39,30 @@ INT_KEYS = {
 }
 VALID_EPG_MODES = {"M3U_ONLY", "ALL"}
 DEFAULT_EPG_ARTIFACT_NAME = "t.xml.gz"
+DEPRECATED_CONFIG_KEYS = {
+    "DEFAULT_EPG_DAY_OFFSETS": "EPG_DAY_OFFSETS",
+}
+
+
+def validate_epg_day_offsets(value: Any, errors: list[str]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list):
+        errors.append("EPG_DAY_OFFSETS 必须是数组。")
+        return
+    if not value:
+        errors.append("EPG_DAY_OFFSETS 不能为空。")
+        return
+
+    normalized: list[int] = []
+    for item in value:
+        if isinstance(item, bool) or not isinstance(item, int):
+            errors.append("EPG_DAY_OFFSETS 中的每一项都必须是整数。")
+            return
+        normalized.append(item)
+
+    if len(normalized) == 1 and normalized[0] > 0 and normalized[0] < 2:
+        errors.append("EPG_DAY_OFFSETS 使用单个正数时必须大于等于 2。")
 
 
 def load_default_config() -> dict[str, Any]:
@@ -65,6 +92,10 @@ def validate_config_payload(payload: Any) -> dict[str, Any]:
     if not isinstance(payload, dict):
         return {"valid": False, "errors": ["配置必须是 JSON 对象。"], "warnings": []}
 
+    for key, canonical_key in DEPRECATED_CONFIG_KEYS.items():
+        if key in payload:
+            errors.append(f"{key} 不是有效配置项，请使用 {canonical_key}。")
+
     for key in URL_KEYS:
         value = payload.get(key)
         if value is None or value == "":
@@ -81,12 +112,30 @@ def validate_config_payload(payload: Any) -> dict[str, Any]:
         if not isinstance(value, list):
             errors.append(f"{key} 必须是数组。")
 
+    validate_epg_day_offsets(payload.get("EPG_DAY_OFFSETS"), errors)
+
+    for key in TEXT_KEYS:
+        value = payload.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            errors.append(f"{key} 必须是字符串。")
+
     for key in BOOL_KEYS:
         value = payload.get(key)
         if value is None:
             continue
         if not isinstance(value, bool):
             errors.append(f"{key} 必须是布尔值。")
+
+    for key in FLOAT_KEYS:
+        value = payload.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            errors.append(f"{key} 必须是数字。")
+        elif value < 0:
+            errors.append(f"{key} 不能小于 0。")
 
     for key in INT_KEYS:
         value = payload.get(key)

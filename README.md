@@ -90,19 +90,78 @@ http://127.0.0.1:8080
 
 ## Docker 运行
 
-### 1. 构建并启动
+本仓库的 Docker 用法默认基于已经发布到 Docker Hub 的镜像，不需要本地 `build`。
 
-```bash
-docker compose up -d --build
+当前公开镜像仓库为：
+
+```text
+cheukfung/cmcc-iptv-auto-docker:<tag>
 ```
 
-### 2. 访问 WebUI
+可用 tag 由工作流自动发布，通常至少包括：
+
+- `latest`
+- 语义化版本号，例如 `1.0.0`
+- 次版本号，例如 `1.0`
+
+建议先准备持久化目录：
+
+```bash
+mkdir -p runtime/config runtime/output runtime/log runtime/cache runtime/data
+```
+
+### 1. 使用 docker run 启动
+
+```bash
+docker pull cheukfung/cmcc-iptv-auto-docker:latest
+
+docker run -d \
+	--name cmcc_iptv_auto_docker \
+	--restart unless-stopped \
+	-p 8080:8080 \
+	-e TZ=Asia/Shanghai \
+	-v "$(pwd)/runtime/config:/app/runtime/config" \
+	-v "$(pwd)/runtime/output:/app/runtime/output" \
+	-v "$(pwd)/runtime/log:/app/runtime/log" \
+	-v "$(pwd)/runtime/cache:/app/runtime/cache" \
+	-v "$(pwd)/runtime/data:/app/runtime/data" \
+	cheukfung/cmcc-iptv-auto-docker:latest
+```
+
+### 2. 使用 docker compose 启动
+
+仓库里的 [docker-compose.yml](docker-compose.yml) 默认直接拉取：
+
+```text
+cheukfung/cmcc-iptv-auto-docker:latest
+```
+
+直接执行即可：
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+如果你想切换到其他 tag，直接把命令里的 `latest` 改成目标 tag 即可，例如：
+
+```bash
+docker pull cheukfung/cmcc-iptv-auto-docker:1.0.0
+```
+
+或者把 [docker-compose.yml](docker-compose.yml) 里的镜像 tag 改成你要的版本后再执行：
+
+```bash
+docker compose up -d
+```
+
+### 3. 访问 WebUI
 
 ```text
 http://127.0.0.1:8080
 ```
 
-### 3. 持久化目录
+### 4. 持久化目录
 
 compose 默认映射以下目录：
 
