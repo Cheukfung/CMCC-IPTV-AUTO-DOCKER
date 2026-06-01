@@ -18,3 +18,4 @@ runtime/config/myconfig.json
 
 backend/app/core/reference/__pycache__/
 backend/app/core/reference/iptv_checker_v3/__pycache__/
+backend/app/static/
