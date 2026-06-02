@@ -1188,6 +1188,18 @@ button, input, textarea, select {
 
 /* ────── mobile / small tablet (≤720px) ────── */
 @media (max-width: 720px) {
+  :root {
+    --app-radius-sm: 5px;
+    --app-radius-md: 7px;
+    --app-radius-lg: 9px;
+  }
+
+  .dark {
+    --app-radius-sm: 5px;
+    --app-radius-md: 7px;
+    --app-radius-lg: 9px;
+  }
+
   .app-body {
     padding: 12px;
   }
@@ -1322,10 +1334,80 @@ button, input, textarea, select {
   .app-switch {
     font-size: 12px;
   }
+
+  .app-switch .switch__control {
+    width: 34px;
+    height: 20px;
+  }
+
+  .app-switch .switch__thumb {
+    width: 14px;
+    height: 14px;
+  }
+
+  .app-switch[data-selected="true"] .switch__thumb,
+  .app-switch[data-selected] .switch__thumb {
+    transform: translateX(14px);
+  }
+
+  [data-slot="base"].heroui-button,
+  .heroui-button {
+    border-radius: 6px !important;
+  }
+
+  .heroui-chip {
+    border-radius: 5px !important;
+  }
+
+  .heroui-input [data-slot="input"],
+  .heroui-input [data-slot="base"],
+  .heroui-input-wrapper {
+    border-radius: 6px !important;
+  }
+
+  [data-slot="base"].heroui-accordion {
+    border-radius: 8px !important;
+  }
+
+  [data-slot="trigger"].heroui-accordion-trigger {
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  [data-slot="heading"].heroui-accordion-heading {
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  .config-section {
+    border-radius: 9px;
+  }
+
+  .select-trigger {
+    border-radius: 5px !important;
+  }
+
+  .select-popover {
+    border-radius: 7px !important;
+  }
+
+  .select-option {
+    border-radius: 4px !important;
+  }
 }
 
 /* ────── small phone (≤480px) ────── */
 @media (max-width: 480px) {
+  :root {
+    --app-radius-sm: 4px;
+    --app-radius-md: 5px;
+    --app-radius-lg: 7px;
+  }
+
+  .dark {
+    --app-radius-sm: 4px;
+    --app-radius-md: 5px;
+    --app-radius-lg: 7px;
+  }
+
   .app-body {
     padding: 10px;
   }
@@ -1378,6 +1460,7 @@ button, input, textarea, select {
   .badge {
     font-size: 10px;
     padding: 1px 6px;
+    border-radius: 4px !important;
   }
 
   .card-heading h2 {
@@ -1415,5 +1498,63 @@ button, input, textarea, select {
 
   .data-table {
     min-width: 420px;
+  }
+
+  [data-slot="base"].heroui-button,
+  .heroui-button {
+    border-radius: 5px !important;
+  }
+
+  .heroui-chip {
+    border-radius: 4px !important;
+  }
+
+  .heroui-input [data-slot="input"],
+  .heroui-input [data-slot="base"],
+  .heroui-input-wrapper {
+    border-radius: 5px !important;
+  }
+
+  [data-slot="base"].heroui-accordion {
+    border-radius: 6px !important;
+  }
+
+  [data-slot="trigger"].heroui-accordion-trigger {
+    border-radius: 6px 6px 0 0 !important;
+  }
+
+  [data-slot="heading"].heroui-accordion-heading {
+    border-radius: 6px 6px 0 0 !important;
+  }
+
+  .config-section {
+    border-radius: 7px;
+  }
+
+  .select-trigger {
+    border-radius: 4px !important;
+  }
+
+  .select-popover {
+    border-radius: 5px !important;
+  }
+
+  .select-option {
+    border-radius: 3px !important;
+  }
+
+  .app-switch .switch__control {
+    width: 30px;
+    height: 18px;
+  }
+
+  .app-switch .switch__thumb {
+    width: 12px;
+    height: 12px;
+  }
+
+  .app-switch[data-selected="true"] .switch__thumb,
+  .app-switch[data-selected] .switch__thumb {
+    transform: translateX(12px);
   }
 }

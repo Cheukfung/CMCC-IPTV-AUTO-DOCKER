@@ -93,6 +93,13 @@ export function normalizeFieldPayloadValue(field, value) {
       .filter((item) => item !== null);
   }
   if (field.type === "mapping") {
+    if (isPlainObject(value) && !Array.isArray(value)) {
+      return Object.fromEntries(
+        Object.entries(value)
+          .map(([k, v]) => [String(k ?? "").trim(), String(v ?? "").trim()])
+          .filter(([k, v]) => k && v)
+      );
+    }
     const rows = Array.isArray(value) ? value : [];
     return Object.fromEntries(
       rows
