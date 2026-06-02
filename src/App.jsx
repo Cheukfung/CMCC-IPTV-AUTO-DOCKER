@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Chip, Toast } from "@heroui/react";
 import {
   LoaderCircle,
+  Moon,
   Play,
   Settings,
+  Sun,
   Terminal,
   FolderOpen,
   Gauge,
@@ -15,6 +17,7 @@ import { useHealth } from "./hooks/useHealth";
 import { useTasks, useTaskLog } from "./hooks/useTasks";
 import { useArtifacts } from "./hooks/useArtifacts";
 import { useSchedule } from "./hooks/useSchedule";
+import { useTheme } from "./hooks/useTheme";
 import { NAV_TAB_IDS } from "./config/sections";
 import { DashboardView } from "./views/DashboardView";
 import { RunView } from "./views/RunView";
@@ -37,6 +40,7 @@ export default function App() {
   const { artifacts, loadArtifacts, previewArtifact, resolveDownloadUrl } = useArtifacts();
   const { scheduleForm, setScheduleForm, loadSchedule, saveSchedule: apiSaveSchedule, triggerSchedule } = useSchedule();
   const configHook = useConfig();
+  const { theme, toggleTheme } = useTheme();
 
   const runningTask = health.running_task || null;
   const publicDownloadEntries = configHook.publicDownloadEntries;
@@ -162,7 +166,12 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <div className="header-status">
+            <div className="header-actions">
+              <button className="theme-toggle" onClick={toggleTheme} title={theme === "dark" ? "切换亮色模式" : "切换暗色模式"}>
+                {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+            </div>
+            <div className="header-status">
           <Chip color={health.status === "ok" ? "success" : "warning"} variant="flat" size="sm">
             {health.status === "ok" ? "正常" : health.status}
           </Chip>

@@ -26,6 +26,7 @@ export function ArtifactsView({ artifacts, publicDownloadEntries, getDownloadUrl
             </div>
           </div>
           <div className="card-body">
+            <div className="data-table-wrap">
             <table className="data-table">
               <thead>
                 <tr>
@@ -59,6 +60,7 @@ export function ArtifactsView({ artifacts, publicDownloadEntries, getDownloadUrl
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
