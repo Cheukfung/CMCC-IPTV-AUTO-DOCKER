@@ -45,7 +45,7 @@ export function LogsView({ tasks, activeTaskId, setActiveTaskId, logContent, aut
             <div className="chip-row">
               <span className="badge badge-primary">{activeTask.id}</span>
               <span className={`badge badge-${statusColor(activeTask.status)}`}>{statusText(activeTask.status)}</span>
-              <span className="badge badge-neutral">来源 {sourceText(activeTask.source)}</span>
+              <span className="badge badge-neutral">触发方式 {sourceText(activeTask.source)}</span>
               <span className="badge badge-neutral">退出码 {activeTask.exit_code ?? "-"}</span>
               <span className="badge badge-neutral">{activeTask.message || "-"}</span>
             </div>

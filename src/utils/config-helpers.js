@@ -119,5 +119,5 @@ export function formatFieldPreview(field, value) {
     return entries.length ? entries.map(([left, right]) => `${left} -> ${right}`).join("；") : "无映射";
   }
   const text = String(normalized ?? "");
-  return text || "空值";
+  return text || "未设置";
 }

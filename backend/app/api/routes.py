@@ -113,7 +113,7 @@ def download_artifact(name: str) -> FileResponse:
     try:
         path = resolve_artifact(name)
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail="产物不存在。") from exc
+        raise HTTPException(status_code=404, detail="输出文件不存在。") from exc
     return FileResponse(path, filename=path.name)
 
 
@@ -122,7 +122,7 @@ def preview_artifact(name: str, lines: int = Query(default=200, ge=1, le=1000)) 
     try:
         return read_artifact_preview(name, lines=lines)
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail="产物不存在。") from exc
+        raise HTTPException(status_code=404, detail="输出文件不存在。") from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

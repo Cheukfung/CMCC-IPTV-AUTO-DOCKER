@@ -21,8 +21,8 @@ export function ArtifactsView({ artifacts, publicDownloadEntries, getDownloadUrl
         <div className="card card-artifact-list">
           <div className="card-heading">
             <div>
-              <h2>输出文件</h2>
-              <p>下载、预览当前 runtime/output 中的产物。</p>
+<h2>输出文件</h2>
+            <p>下载、预览当前 runtime/output 中的文件。</p>
             </div>
           </div>
           <div className="card-body">
@@ -55,7 +55,7 @@ export function ArtifactsView({ artifacts, publicDownloadEntries, getDownloadUrl
                     </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={4} className="empty-cell">暂无输出文件</td></tr>
+                  <tr><td colSpan={4} className="empty-cell">暂无输出</td></tr>
                 )}
               </tbody>
             </table>

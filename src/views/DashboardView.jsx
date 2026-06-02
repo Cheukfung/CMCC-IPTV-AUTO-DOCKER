@@ -33,7 +33,7 @@ export function DashboardView({ health, tasks, artifacts, onOpenTaskLogs, onPrev
             <FolderOpen size={16} />
           </div>
           <div className="metric-info">
-            <span className="metric-label">产物数量</span>
+            <span className="metric-label">输出数量</span>
             <strong className="metric-value">{artifacts.length}</strong>
             <span className="metric-detail">{tasks.length} 条任务记录</span>
           </div>
@@ -47,7 +47,7 @@ export function DashboardView({ health, tasks, artifacts, onOpenTaskLogs, onPrev
           </div>
           <div>
             <strong>正在执行任务 {runningTask.id}</strong>
-            <span>当前状态: {runningTask.status}</span>
+            <span>状态: {runningTask.status}</span>
           </div>
         </div>
       )}
@@ -66,7 +66,7 @@ export function DashboardView({ health, tasks, artifacts, onOpenTaskLogs, onPrev
                 <tr>
                   <th>任务 ID</th>
                   <th>状态</th>
-                  <th>来源</th>
+                  <th>触发方式</th>
                   <th>创建时间</th>
                 </tr>
               </thead>
@@ -114,8 +114,8 @@ export function DashboardView({ health, tasks, artifacts, onOpenTaskLogs, onPrev
           <div className="card card-span-12">
             <div className="card-heading">
               <div>
-                <h2>最近产物</h2>
-                <p>点击预览文件内容，或进入产物页复制下载地址。</p>
+                <h2>最近输出</h2>
+                <p>点击预览文件内容，或进入输出页复制下载地址。</p>
               </div>
             </div>
             <div className="card-body">
@@ -143,7 +143,7 @@ export function DashboardView({ health, tasks, artifacts, onOpenTaskLogs, onPrev
           <div className="card card-span-12">
             <div className="card-body">
               <div className="empty-state">
-                <span>暂无输出文件，任务完成后会在这里出现。</span>
+                <span>暂无输出，任务完成后会在这里出现。</span>
               </div>
             </div>
           </div>

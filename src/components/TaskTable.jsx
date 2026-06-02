@@ -9,7 +9,7 @@ export function TaskTable({ tasks, onOpen }) {
           <tr>
             <th>任务 ID</th>
             <th>状态</th>
-            <th>来源</th>
+            <th>触发方式</th>
             <th>创建时间</th>
           </tr>
         </thead>

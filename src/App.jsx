@@ -135,7 +135,7 @@ export default function App() {
     { id: "run", label: "运行", icon: Play },
     { id: "config", label: "配置", icon: Settings },
     { id: "logs", label: "日志", icon: Terminal },
-    { id: "artifacts", label: "产物", icon: FolderOpen },
+    { id: "artifacts", label: "输出", icon: FolderOpen },
     { id: "schedule", label: "定时", icon: AlarmClock },
   ];
 

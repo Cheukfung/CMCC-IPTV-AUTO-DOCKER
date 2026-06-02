@@ -11,8 +11,8 @@ export function RunView({ onRunTask, onTriggerSchedule }) {
   async function handleRunTask() {
     try {
       const task = await onRunTask(runForm);
-      setRunStatus(`任务已启动: ${task.id}`);
-      notify("success", `任务已启动: ${task.id}`);
+      setRunStatus(`任务已开始: ${task.id}`);
+      notify("success", `任务已开始: ${task.id}`);
     } catch (error) {
       setRunStatus(error.message);
       notify("danger", error.message);
@@ -35,8 +35,8 @@ export function RunView({ onRunTask, onTriggerSchedule }) {
       <div className="card">
         <div className="card-heading">
           <div>
-            <h2>手动执行</h2>
-            <p>选择本次执行要跳过的步骤，然后启动任务。</p>
+            <h2>手动运行</h2>
+            <p>选择本次运行要跳过的步骤，然后启动任务。</p>
           </div>
         </div>
         <div className="card-body gap-5">

@@ -37,7 +37,7 @@ export function ArtifactTable({ artifacts, onPreview, getDownloadUrl, onCopy }) 
             ))
           ) : (
             <tr>
-              <td colSpan={4} className="empty-cell">暂无输出文件</td>
+              <td colSpan={4} className="empty-cell">暂无输出</td>
             </tr>
           )}
         </tbody>

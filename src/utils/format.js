@@ -22,15 +22,15 @@ export function statusText(status) {
   const textMap = {
     success: "成功",
     failed: "失败",
-    running: "运行中",
-    pending: "等待中",
+    running: "执行中",
+    pending: "等待执行",
   };
   return textMap[status] || status || "-";
 }
 
 export function sourceText(source) {
   const textMap = {
-    manual: "手动",
+    manual: "手动触发",
     schedule: "定时",
     "schedule-manual": "定时触发",
   };
