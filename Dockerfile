@@ -28,7 +28,7 @@ COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend backend
-COPY --from=frontend /app/backend/app/static backend/app/static
+COPY --from=frontend /app/frontend/backend/app/static backend/app/static
 COPY runtime runtime
 
 EXPOSE 8080
