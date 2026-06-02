@@ -50,7 +50,7 @@ export const CONFIG_SECTIONS = [
     title: "外部 M3U 合并",
     description: "外部频道源、缓存文件与分组映射关系。",
     fields: [
-      { key: "ENABLE_EXTERNAL_M3U_MERGE", label: "启用外部 M3U 合并", type: "boolean", description: "关闭后不会下载和合并额外频道源。", defaultValue: true },
+      { key: "ENABLE_EXTERNAL_M3U_MERGE", label: "启用外部 M3U 合并", type: "boolean", description: "关闭后不会下载和合并额外频道源。", defaultValue: false },
       { key: "EXTERNAL_M3U_URL", label: "外部 M3U 地址", type: "text", description: "外部频道列表下载地址。", placeholder: "https://example.com/list.m3u", defaultValue: "https://raw.githubusercontent.com/Jsnzkpg/Jsnzkpg/Jsnzkpg/Jsnzkpg1.m3u" },
       { key: "EXTERNAL_GROUP_TITLES", label: "外部分组映射", type: "mapping", description: "左侧写匹配关键词，右侧写最终分组名称。", defaultValue: { 港澳台: "港澳台" }, fullWidth: true, leftLabel: "匹配关键词", rightLabel: "目标分组", addLabel: "新增映射" },
       { key: "CACHE_M3U_FILENAME", label: "外部 M3U 缓存文件名", type: "text", description: "网络失败时缓存到 runtime/cache 的文件名。", defaultValue: "cache.m3u" },
