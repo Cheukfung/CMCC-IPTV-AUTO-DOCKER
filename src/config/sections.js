@@ -11,7 +11,7 @@ export const CONFIG_SECTIONS = [
       { key: "CATCHUP_SOURCE_PREFIX", label: "回看源前缀", type: "text", description: "支持回看频道的基础前缀。", placeholder: "http://183.235.xx.xx:6610/190000002005", defaultValue: "http://183.235.162.80:6610/190000002005" },
       { key: "NGINX_PROXY_PREFIX", label: "Nginx 代理前缀", type: "text", description: "用于外网访问回看和 Logo 代理，留空则关闭。", placeholder: "http://your-domain:7077", defaultValue: "" },
       { key: "ENABLE_NGINX_PROXY_FOR_TV", label: "tv.m3u 也走代理", type: "boolean", description: "开启后 tv.m3u 同样使用 Nginx 代理前缀。", defaultValue: false },
-      { key: "M3U_EPG_URL", label: "M3U EPG 地址", type: "text", description: "写入 M3U 顶部 x-tvg-url，默认跟随当前服务的 t.xml.gz 下载地址。", placeholder: "http://your-domain/api/artifacts/t.xml.gz/download", defaultValue: "" },
+      { key: "M3U_EPG_URL", label: "M3U EPG 地址", type: "text", description: "写入 M3U 顶部 x-tvg-url；留空则不写入。", placeholder: "http://your-domain/api/artifacts/t.xml.gz/download", defaultValue: "" },
     ],
   },
   {

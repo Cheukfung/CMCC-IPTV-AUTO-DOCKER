@@ -22,7 +22,7 @@
 - 生成 tv.m3u、tv2.m3u、ku9.m3u、aptv.m3u
 - 可选生成 t.xml 和 t.xml.gz
 - 自动暴露产物下载地址
-- 当 M3U_EPG_URL 留空时，自动为生成的 M3U 写入当前服务地址对应的 x-tvg-url
+- 可手动配置 M3U 顶部的 x-tvg-url
 
 ## 架构说明
 
@@ -195,7 +195,7 @@ compose 默认映射以下目录：
 
 - IS_HWURL: true，默认优先使用 hwurl，zteurl 作为回退
 - REPLACEMENT_IP: http://192.168.0.1:7088/udp
-- M3U_EPG_URL: 空字符串，表示默认跟随当前服务地址自动生成
+- M3U_EPG_URL: 空字符串，表示不写入 x-tvg-url；需要时请手动填写
 - ENABLE_EPG_DOWNLOAD: true
 - EPG_DOWNLOAD_MODE: M3U_ONLY
 - ENABLE_EXTERNAL_M3U_MERGE: false
@@ -226,12 +226,11 @@ schedule.json 当前结构如下：
 
 - 生成产物的绝对下载地址
 - 在 /api/artifacts 中返回 download_url
-- 当 M3U_EPG_URL 为空时，自动把 t.xml.gz 下载地址写入生成的 M3U 顶部 x-tvg-url
 
 这意味着：
 
 - 如果你通过反向代理域名访问系统，建议通过最终对外地址打开 WebUI 并执行一次任务
-- 如果你希望固定使用特定 EPG 地址，也可以直接在配置中手动填写 M3U_EPG_URL
+- M3U 顶部 x-tvg-url 不会自动使用公开基址；需要写入时请手动填写 M3U_EPG_URL
 
 ## 产物说明
 
@@ -276,12 +275,9 @@ WebUI 中可以直接：
 
 如果启用了深度探测，请确认本地环境存在 ffprobe。Docker 镜像已内置 ffmpeg，本地模式则需要自行安装。
 
-### M3U 顶部 x-tvg-url 不是你想要的地址
+### M3U 顶部没有 x-tvg-url
 
-当 M3U_EPG_URL 留空时，系统会采用最近一次识别到的公开基址。解决办法有两个：
-
-- 用最终对外访问地址重新打开 WebUI 并执行一次任务
-- 直接手动填写 M3U_EPG_URL
+M3U_EPG_URL 留空时不会写入 x-tvg-url。需要播放器读取节目单时，请在配置中手动填写 M3U_EPG_URL。
 
 ### 修改配置后没有看到预期效果
 

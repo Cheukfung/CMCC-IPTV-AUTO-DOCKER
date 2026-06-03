@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from .artifact_service import build_artifact_url_map
-from .runtime import DEFAULT_CONFIG_FILE, USER_CONFIG_FILE, load_json_file, load_public_base_url, save_json_file
+from .runtime import BUILTIN_DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_FILE, USER_CONFIG_FILE, load_json_file, load_public_base_url, save_json_file
 
 URL_KEYS = {
     "REPLACEMENT_IP",
@@ -38,7 +38,6 @@ INT_KEYS = {
     "CHECK_CACHE_EXPIRE",
 }
 VALID_EPG_MODES = {"M3U_ONLY", "ALL"}
-DEFAULT_EPG_ARTIFACT_NAME = "t.xml.gz"
 DEPRECATED_CONFIG_KEYS = {
     "DEFAULT_EPG_DAY_OFFSETS": "EPG_DAY_OFFSETS",
 }
@@ -66,7 +65,11 @@ def validate_epg_day_offsets(value: Any, errors: list[str]) -> None:
 
 
 def load_default_config() -> dict[str, Any]:
-    return load_json_file(DEFAULT_CONFIG_FILE, {})
+    default_config = deepcopy(load_json_file(BUILTIN_DEFAULT_CONFIG_FILE, {}))
+    runtime_default_config = load_json_file(DEFAULT_CONFIG_FILE, {})
+    if isinstance(runtime_default_config, dict):
+        default_config.update(runtime_default_config)
+    return default_config
 
 
 def load_user_config() -> dict[str, Any]:
@@ -177,9 +180,6 @@ def get_config_bundle(public_base_url: str | None = None) -> dict[str, Any]:
     user_config = load_user_config()
     resolved_base_url, artifact_urls = _resolve_public_context(public_base_url)
 
-    if not default_config.get("M3U_EPG_URL") and artifact_urls.get(DEFAULT_EPG_ARTIFACT_NAME):
-        default_config["M3U_EPG_URL"] = artifact_urls[DEFAULT_EPG_ARTIFACT_NAME]
-
     merged = deepcopy(default_config)
     merged.update(user_config)
 
@@ -190,7 +190,6 @@ def get_config_bundle(public_base_url: str | None = None) -> dict[str, Any]:
         "validation": validate_config_payload(user_config),
         "public_base_url": resolved_base_url,
         "artifact_urls": artifact_urls,
-        "default_epg_url": artifact_urls.get(DEFAULT_EPG_ARTIFACT_NAME),
     }
 
 

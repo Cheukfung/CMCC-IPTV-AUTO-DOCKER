@@ -28,9 +28,7 @@
   "ENABLE_EXTERNAL_M3U_MERGE": false,
   "CACHE_M3U_FILENAME": "cache.m3u",
   "ENABLE_STREAM_CHECK": true,
-  "CHECK_TARGET_GROUPS": [
-    "港澳台"
-  ],
+  "CHECK_TARGET_GROUPS": ["港澳台"],
   "CHECK_TIMEOUT": 5,
   "CHECK_WORKERS": 4,
   "ENABLE_PROBE": true,

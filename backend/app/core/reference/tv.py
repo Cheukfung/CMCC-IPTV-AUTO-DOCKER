@@ -64,20 +64,20 @@ XML_FILENAME = os.path.join(OUTPUT_DIR, "t.xml")            # XML节目单文件
 
 # 播放代理与替换配置
 REPLACEMENT_IP = "http://192.168.0.1:7088/udp"  # UDPXY地址
-REPLACEMENT_IP_TV = ""            # tv.m3u 专用的 UDPXY 地址（默认为空，使用原始地址）
+REPLACEMENT_IP_TV = "http://10.10.10.1:5140/udp"  # tv.m3u 专用的 UDPXY 地址（默认为空，使用原始地址）
 CATCHUP_SOURCE_PREFIX = "http://183.235.162.80:6610/190000002005"  # 回看源前缀
 NGINX_PROXY_PREFIX = ""           # 针对外网播放的nginx代理
 ENABLE_NGINX_PROXY_FOR_TV = False # tv.m3u 是否使用 NGINX_PROXY_PREFIX 代理（默认 False）
 JSON_URL = "http://183.235.16.92:8082/epg/api/custom/getAllChannel.json" # JSON 文件下载 URL
 
 # EPG 地址配置 - 可自定义修改
-M3U_EPG_URL = ""  # 留空时，WebUI 会自动回填当前服务的 t.xml.gz 下载地址
+M3U_EPG_URL = ""  # 留空时不写入 x-tvg-url，只有用户填写时才写入
 EPG_BASE_URLS = [
     "http://183.235.16.92:8082/epg/api/channel/",
     "http://183.235.11.39:8082/epg/api/channel/"
 ]
 # EPG 下载日期偏移（相对于今天，单位：天）
-DEFAULT_EPG_DAY_OFFSETS = [-5, -4, -3, -2, -1, 0, 1]
+DEFAULT_EPG_DAY_OFFSETS = [8]
 EPG_DAY_OFFSETS = DEFAULT_EPG_DAY_OFFSETS.copy()
 
 # 回看参数配置 - 可自定义修改
@@ -89,6 +89,7 @@ CATCHUP_URL_APTV = "{prefix}/{ztecode}/index.m3u8?starttime=${{(b)yyyyMMddHHmmss
 BASE_DIR = RUNTIME_BASE_DIR
 COMMON_CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 USER_CONFIG_FILE = os.path.join(CONFIG_DIR, "myconfig.json")
+BUILTIN_DEFAULT_CONFIG_FILE = os.path.join(SOURCE_BASE_DIR, "default_config.json")
 CHANNEL_ORDER_FILE = os.path.join(CONFIG_DIR, "channel_order.json")        # 频道排序文件
 CUSTOM_CHANNELS_FILE = os.path.join(CONFIG_DIR, "custom_channels.json")    # 自定义频道文件
 
@@ -99,7 +100,7 @@ EXTERNAL_M3U_URL = "https://raw.githubusercontent.com/Jsnzkpg/Jsnzkpg/Jsnzkpg/Js
 EXTERNAL_GROUP_TITLES = {
     "港澳台": "港澳台"
 }
-ENABLE_EXTERNAL_M3U_MERGE = True  # 是否合并外部 M3U 到所有 M3U 文件 (True/False)
+ENABLE_EXTERNAL_M3U_MERGE = False  # 是否合并外部 M3U 到所有 M3U 文件 (True/False)
 CACHE_M3U_FILENAME = "cache.m3u"  # 外部 M3U 下载缓存文件名
 
 # ===================== 智能测活与质量探测配置 =====================
@@ -232,8 +233,10 @@ def normalize_epg_day_offsets(offsets):
 
 # ===================== 核心优化 1：环境初始化与配置管理 =====================
 def load_runtime_config_overrides():
-    """读取并合并 config.json 和 myconfig.json，供全局初始化使用"""
+    """读取并合并内置默认、config.json 和 myconfig.json，供全局初始化使用"""
     merged = {}
+    if builtin_config := load_json_config_file(BUILTIN_DEFAULT_CONFIG_FILE):
+        merged.update(builtin_config)
     if common_config := load_json_config_file(COMMON_CONFIG_FILE):
         merged.update(common_config)
     if user_config := load_json_config_file(USER_CONFIG_FILE):
@@ -251,10 +254,6 @@ def initialize_environment():
     if isinstance(config, dict):
         for key, value in config.items():
             if key in globals(): globals()[key] = value
-
-    public_base_url = normalize_url(os.getenv('CMCC_IPTV_PUBLIC_BASE_URL', ''), trailing_slash='remove')
-    if not M3U_EPG_URL and public_base_url:
-        globals()['M3U_EPG_URL'] = f"{public_base_url}/api/artifacts/{os.path.basename(XML_GZ_FILENAME)}/download"
 
     global EPG_DAY_OFFSETS, EPG_BASE_URLS
     global BLACKLIST_TITLE_SET, BLACKLIST_CODE_SET, BLACKLIST_ZTEURL_SET, BLACKLIST_TITLE_PATTERN, BLACKLIST_URL_PATTERN
