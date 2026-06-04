@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Chip, Toast } from "@heroui/react";
 import {
   LoaderCircle,
@@ -10,6 +10,7 @@ import {
   FolderOpen,
   Gauge,
   AlarmClock,
+  Monitor,
   Tv,
 } from "lucide-react";
 import { useConfig } from "./hooks/useConfig";
@@ -40,7 +41,7 @@ export default function App() {
   const { artifacts, loadArtifacts, previewArtifact, resolveDownloadUrl } = useArtifacts();
   const { scheduleForm, setScheduleForm, loadSchedule, saveSchedule: apiSaveSchedule, triggerSchedule } = useSchedule();
   const configHook = useConfig();
-  const { theme, toggleTheme } = useTheme();
+  const { themeMode, resolvedTheme, setThemeMode } = useTheme();
 
   const runningTask = health.running_task || null;
   const publicDownloadEntries = configHook.publicDownloadEntries;
@@ -72,10 +73,11 @@ export default function App() {
   }, [refreshLiveData]);
 
   useEffect(() => {
-    if (autoRefresh && activeTaskId) {
-      loadLog(activeTaskId);
-    }
-  }, [activeTaskId, autoRefresh, loadLog]);
+    if (!autoRefresh || !activeTaskId || activeView !== "logs") return undefined;
+    loadLog(activeTaskId);
+    const interval = setInterval(() => loadLog(activeTaskId), 3000);
+    return () => clearInterval(interval);
+  }, [activeTaskId, activeView, autoRefresh, loadLog]);
 
   useEffect(() => {
     const handleHashChange = () => setActiveView(getHashView());
@@ -143,6 +145,12 @@ export default function App() {
     { id: "schedule", label: "定时", icon: AlarmClock },
   ];
 
+  const themeOptions = [
+    { id: "system", label: "自动切换模式", icon: Monitor },
+    { id: "light", label: "亮色模式", icon: Sun },
+    { id: "dark", label: "黑夜模式", icon: Moon },
+  ];
+
   return (
     <main className="app-shell">
       <Toast.Provider placement="top end" />
@@ -166,12 +174,23 @@ export default function App() {
             </button>
           ))}
         </nav>
-            <div className="header-actions">
-              <button className="theme-toggle" onClick={toggleTheme} title={theme === "dark" ? "切换亮色模式" : "切换暗色模式"}>
-                {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+        <div className="header-actions">
+          <div className="theme-mode-group" aria-label={`主题模式，当前${themeOptions.find((option) => option.id === themeMode)?.label || ""}`}>
+            {themeOptions.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                className={`theme-mode-button ${themeMode === id ? "active" : ""}`}
+                onClick={() => setThemeMode(id)}
+                title={id === "system" ? `${label}（当前${resolvedTheme === "dark" ? "黑夜" : "亮色"}）` : label}
+                aria-label={label}
+                aria-pressed={themeMode === id}
+              >
+                <Icon size={15} />
               </button>
-            </div>
-            <div className="header-status">
+            ))}
+          </div>
+        </div>
+        <div className="header-status">
           <Chip color={health.status === "ok" ? "success" : "warning"} variant="flat" size="sm">
             {health.status === "ok" ? "正常" : health.status}
           </Chip>

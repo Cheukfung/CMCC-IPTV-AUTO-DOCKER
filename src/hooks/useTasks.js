@@ -33,7 +33,7 @@ export function useTaskLog(activeTaskId) {
 
   const loadLog = useCallback(
     async (taskId) => {
-      const id = taskId || activeTaskId;
+      const id = taskId === undefined ? activeTaskId : taskId;
       if (!id) {
         setLogContent("暂无日志。");
         return;

@@ -1,18 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 
 const THEME_KEY = "cmcc-iptv-theme";
+const THEME_MODES = new Set(["system", "light", "dark"]);
 
-function getInitialTheme() {
-  try {
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored === "light" || stored === "dark") return stored;
-  } catch {}
+function getSystemTheme() {
   if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
   return "light";
 }
 
+function getInitialThemeMode() {
+  try {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (THEME_MODES.has(stored)) return stored;
+  } catch {}
+  return "system";
+}
+
 export function useTheme() {
-  const [theme, setTheme] = useState(getInitialTheme);
+  const [themeMode, setThemeMode] = useState(getInitialThemeMode);
+  const [systemTheme, setSystemTheme] = useState(getSystemTheme);
+  const resolvedTheme = themeMode === "system" ? systemTheme : themeMode;
 
   const applyTheme = useCallback((next) => {
     const root = document.documentElement;
@@ -24,15 +31,19 @@ export function useTheme() {
   }, []);
 
   useEffect(() => {
-    applyTheme(theme);
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch {}
-  }, [theme, applyTheme]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => setSystemTheme(media.matches ? "dark" : "light");
+    handleChange();
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
   }, []);
 
-  return { theme, toggleTheme, setTheme };
+  useEffect(() => {
+    applyTheme(resolvedTheme);
+    try {
+      localStorage.setItem(THEME_KEY, themeMode);
+    } catch {}
+  }, [themeMode, resolvedTheme, applyTheme]);
+
+  return { themeMode, resolvedTheme, setThemeMode };
 }

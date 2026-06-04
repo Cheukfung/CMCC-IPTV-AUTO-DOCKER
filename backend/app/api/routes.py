@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -95,11 +95,12 @@ def get_task(task_id: str, request: Request) -> dict[str, Any]:
 
 
 @router.get("/tasks/{task_id}/logs")
-def get_task_logs(task_id: str, request: Request, tail: int = Query(default=200, ge=1, le=2000)) -> dict[str, Any]:
+def get_task_logs(task_id: str, request: Request, response: Response, tail: int = Query(default=200, ge=1, le=2000)) -> dict[str, Any]:
     task_manager: TaskManager = request.app.state.task_manager
     task = task_manager.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="任务不存在。")
+    response.headers["Cache-Control"] = "no-store"
     return {"task_id": task_id, "content": task_manager.read_task_log(task_id, tail=tail)}
 
 

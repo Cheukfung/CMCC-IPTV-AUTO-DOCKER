@@ -1,6 +1,8 @@
 export async function api(path, options = {}) {
+  const method = options.method || "GET";
   const response = await fetch(path, {
     headers: { "Content-Type": "application/json" },
+    cache: method === "GET" ? "no-store" : undefined,
     ...options,
   });
 
